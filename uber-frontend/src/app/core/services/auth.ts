@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { Observable, tap } from 'rxjs';
@@ -10,9 +10,14 @@ const TOKEN_KEY = 'auth_token';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private jwtHelper = new JwtHelperService();
+  private readonly jwtHelper = new JwtHelperService();
+  private readonly http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  // A real signal, not just a plain getter: this app runs zoneless (no zone.js), so a template
+  // reading a signal is what makes it re-render on login/logout — a plain method call re-reading
+  // localStorage on every call would only *happen* to update when something else (e.g. a router
+  // navigation) triggers change detection for other reasons.
+  private readonly loggedIn = signal(this.hasValidToken());
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
     return this.http
@@ -26,10 +31,12 @@ export class AuthService {
 
   logout(): void {
     localStorage.removeItem(TOKEN_KEY);
+    this.loggedIn.set(false);
   }
 
   setToken(token: string): void {
     localStorage.setItem(TOKEN_KEY, token);
+    this.loggedIn.set(true);
   }
 
   getToken(): string | null {
@@ -37,8 +44,7 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    const token = this.getToken();
-    return !!token && !this.jwtHelper.isTokenExpired(token);
+    return this.loggedIn();
   }
 
   getCurrentUser(): User | null {
@@ -62,5 +68,10 @@ export class AuthService {
   hasRole(...roles: UserRole[]): boolean {
     const role = this.getRole();
     return !!role && roles.includes(role);
+  }
+
+  private hasValidToken(): boolean {
+    const token = this.getToken();
+    return !!token && !this.jwtHelper.isTokenExpired(token);
   }
 }

@@ -1,0 +1,61 @@
+<div class="d-flex justify-content-center py-5">
+  @if (submitted()) {
+    <div class="alert alert-success success" style="max-width: 420px">
+      Thanks for rating your ride!
+    </div>
+  } @else {
+    <form
+      class="card p-4 shadow-sm"
+      style="width: 100%; max-width: 420px"
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+    >
+      <h1 class="h4 mb-3">Rate your ride</h1>
+
+      <div class="mb-3">
+        <label for="driverRating" class="form-label">Driver rating (1–5)</label>
+        <input
+          id="driverRating"
+          type="number"
+          min="1"
+          max="5"
+          class="form-control"
+          [class.is-invalid]="form.controls.driverRating.invalid && form.controls.driverRating.touched"
+          formControlName="driverRating"
+        />
+        @if (form.controls.driverRating.invalid && form.controls.driverRating.touched) {
+          <div class="invalid-feedback field-error">Pick a driver rating between 1 and 5.</div>
+        }
+      </div>
+
+      <div class="mb-3">
+        <label for="vehicleRating" class="form-label">Vehicle rating (1–5)</label>
+        <input
+          id="vehicleRating"
+          type="number"
+          min="1"
+          max="5"
+          class="form-control"
+          [class.is-invalid]="form.controls.vehicleRating.invalid && form.controls.vehicleRating.touched"
+          formControlName="vehicleRating"
+        />
+        @if (form.controls.vehicleRating.invalid && form.controls.vehicleRating.touched) {
+          <div class="invalid-feedback field-error">Pick a vehicle rating between 1 and 5.</div>
+        }
+      </div>
+
+      <div class="mb-3">
+        <label for="comment" class="form-label">Comment (optional)</label>
+        <textarea id="comment" class="form-control" formControlName="comment"></textarea>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="alert alert-danger py-2 form-error">{{ errorMessage() }}</div>
+      }
+
+      <button type="submit" class="btn btn-primary w-100" [disabled]="submitting()">
+        {{ submitting() ? 'Submitting…' : 'Submit rating' }}
+      </button>
+    </form>
+  }
+</div>

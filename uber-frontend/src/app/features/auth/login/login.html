@@ -1,0 +1,48 @@
+<div class="d-flex justify-content-center py-5">
+  <form
+    class="card p-4 shadow-sm"
+    style="width: 100%; max-width: 380px"
+    [formGroup]="form"
+    (ngSubmit)="submit()"
+  >
+    <h1 class="h4 mb-3">Log in</h1>
+
+    <div class="mb-3">
+      <label for="email" class="form-label">Email</label>
+      <input
+        id="email"
+        type="email"
+        class="form-control"
+        [class.is-invalid]="form.controls.email.invalid && form.controls.email.touched"
+        formControlName="email"
+        autocomplete="email"
+      />
+      @if (form.controls.email.invalid && form.controls.email.touched) {
+        <div class="invalid-feedback">A valid email is required.</div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label for="password" class="form-label">Password</label>
+      <input
+        id="password"
+        type="password"
+        class="form-control"
+        [class.is-invalid]="form.controls.password.invalid && form.controls.password.touched"
+        formControlName="password"
+        autocomplete="current-password"
+      />
+      @if (form.controls.password.invalid && form.controls.password.touched) {
+        <div class="invalid-feedback">Password is required.</div>
+      }
+    </div>
+
+    @if (errorMessage()) {
+      <div class="alert alert-danger py-2">{{ errorMessage() }}</div>
+    }
+
+    <button type="submit" class="btn btn-primary w-100" [disabled]="submitting()">
+      {{ submitting() ? 'Logging in…' : 'Log in' }}
+    </button>
+  </form>
+</div>
