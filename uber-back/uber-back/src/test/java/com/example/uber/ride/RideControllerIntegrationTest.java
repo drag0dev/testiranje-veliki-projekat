@@ -112,6 +112,31 @@ class RideControllerIntegrationTest {
         mockMvc.perform(finishRequest(accepted.getId(), driver)).andExpect(status().isConflict());
     }
 
+    @Test
+    void finishRide_asAdmin_isForbidden() throws Exception {
+        User admin = userRepository.save(TestDataFactory.user("admin@test.com", UserRole.ADMIN));
+
+        mockMvc.perform(finishRequest(activeRide.getId(), admin)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void finishRide_withInvalidToken_isRejected() throws Exception {
+        mockMvc
+                .perform(
+                        post("/api/rides/{id}/finish", activeRide.getId())
+                                .header("Authorization", "Bearer not-a-real-token"))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void finishRide_withNonNumericId_returnsBadRequest() throws Exception {
+        String token = jwtService.generateToken(driver);
+
+        mockMvc
+                .perform(post("/api/rides/{id}/finish", "abc").header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+    }
+
     private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder finishRequest(
             Integer rideId, User actingUser) {
         String token = jwtService.generateToken(actingUser);

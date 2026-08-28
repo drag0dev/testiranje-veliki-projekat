@@ -12,11 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Implements functionality 2.7 (Zavrsetak voznje) from the spec: a driver marks their
- * active ride as finished, the driver becomes available again (or picks up the next
- * already-assigned scheduled ride, if any), and the passenger is notified.
- */
 @Service
 @RequiredArgsConstructor
 public class RideService {

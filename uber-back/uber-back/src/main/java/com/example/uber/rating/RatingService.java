@@ -12,10 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Backs functionality 2.8 (Ocenjivanje vozila i vozaca): a passenger rates the driver
- * and vehicle of a finished ride, within 3 days of the ride ending, at most once.
- */
 @Service
 @RequiredArgsConstructor
 public class RatingService {

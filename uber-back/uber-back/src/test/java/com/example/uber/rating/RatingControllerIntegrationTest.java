@@ -94,6 +94,56 @@ class RatingControllerIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void rate_withMissingRequiredFields_returnsBadRequest() throws Exception {
+        Ride finished = finishedRide(LocalDateTime.now().minusHours(2));
+        String missingFieldsPayload = "{\"comment\":\"n/a\"}";
+
+        mockMvc
+                .perform(rateRequest(finished.getId(), passenger, missingFieldsPayload))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void rate_rideDoesNotExist_returnsNotFound() throws Exception {
+        mockMvc.perform(rateRequest(999_999, passenger, validPayload())).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void rate_withoutAuthentication_isRejected() throws Exception {
+        Ride finished = finishedRide(LocalDateTime.now().minusHours(2));
+
+        mockMvc
+                .perform(
+                        post("/api/rides/{id}/rating", finished.getId())
+                                .contentType(APPLICATION_JSON)
+                                .content(validPayload()))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void rate_asDriver_isForbidden() throws Exception {
+        Ride finished = finishedRide(LocalDateTime.now().minusHours(2));
+
+        mockMvc.perform(rateRequest(finished.getId(), driver, validPayload())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void rate_justInsideThreeDayWindow_returnsCreated() throws Exception {
+        Ride finished = finishedRide(LocalDateTime.now().minusDays(3).plusMinutes(5));
+
+        mockMvc
+                .perform(rateRequest(finished.getId(), passenger, validPayload()))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void rate_justOutsideThreeDayWindow_returnsConflict() throws Exception {
+        Ride finished = finishedRide(LocalDateTime.now().minusDays(3).minusMinutes(5));
+
+        mockMvc.perform(rateRequest(finished.getId(), passenger, validPayload())).andExpect(status().isConflict());
+    }
+
     private Ride finishedRide(LocalDateTime endTime) {
         Ride ride = TestDataFactory.ride(passenger, driver, RideStatus.FINISHED);
         ride.setEndTime(endTime);

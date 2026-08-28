@@ -7,7 +7,6 @@ import com.example.uber.user.UserRole;
 import com.example.uber.vehicle.VehicleType;
 import java.time.LocalDateTime;
 
-/** Builds transient entities with sane defaults so tests only set the fields they care about. */
 public final class TestDataFactory {
 
     private TestDataFactory() {
