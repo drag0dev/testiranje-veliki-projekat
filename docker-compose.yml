@@ -35,6 +35,27 @@ services:
       postgres:
         condition: service_healthy
 
+  backend:
+    build: ./uber-back/uber-back
+    container_name: uber-backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/uber
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build: ./uber-frontend
+    container_name: uber-frontend
+    restart: unless-stopped
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend
+
 volumes:
   pgdata:
   pgadmin-data:
