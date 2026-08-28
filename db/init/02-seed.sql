@@ -45,6 +45,26 @@ INSERT INTO rides (passenger_id, driver_id, vehicle_type, status, start_address,
      8.5, 1320.00,
      now() - interval '5 minutes', now() - interval '5 minutes');
 
+INSERT INTO rides (passenger_id, driver_id, vehicle_type, status, start_address, start_lat, start_lng, end_address, end_lat, end_lng, distance_km, price, start_time, end_time, created_at) VALUES
+    ((SELECT id FROM users WHERE email = 'bob@example.com'),
+     (SELECT id FROM users WHERE email = 'driver1@rideapp.com'),
+     'STANDARD', 'FINISHED',
+     'Futoška 20, Novi Sad', 45.2496, 19.8286,
+     'Petrovaradinska tvrđava, Novi Sad', 45.2517, 19.8628,
+     4.8, 726.00,
+     now() - interval '1 day', now() - interval '1 day' + interval '20 minutes',
+     now() - interval '1 day');
+
+INSERT INTO rides (passenger_id, driver_id, vehicle_type, status, start_address, start_lat, start_lng, end_address, end_lat, end_lng, distance_km, price, start_time, end_time, created_at) VALUES
+    ((SELECT id FROM users WHERE email = 'carol@example.com'),
+     (SELECT id FROM users WHERE email = 'driver2@rideapp.com'),
+     'LUXURY', 'FINISHED',
+     'Bulevar Evrope 10, Novi Sad', 45.2465, 19.8501,
+     'Sajmište, Novi Sad', 45.2398, 19.8395,
+     3.6, 582.00,
+     now() - interval '6 hours', now() - interval '6 hours' + interval '18 minutes',
+     now() - interval '6 hours');
+
 INSERT INTO rides (passenger_id, vehicle_type, status, start_address, end_address, distance_km, price, scheduled_time, created_at) VALUES
     ((SELECT id FROM users WHERE email = 'carol@example.com'),
      'VAN', 'PENDING',
