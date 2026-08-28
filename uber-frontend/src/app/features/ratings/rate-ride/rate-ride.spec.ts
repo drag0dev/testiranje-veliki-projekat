@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { RateRide } from './rate-ride';
 import { RatingService } from '../../../core/services/rating';
 import { RatingResponse } from '../../../core/models/rating';
@@ -117,5 +117,125 @@ describe('RateRide', () => {
 
     expect(fixture.componentInstance['submitted']()).toBeFalse();
     expect(fixture.componentInstance['errorMessage']()).toBe('Ride has already been rated');
+  });
+
+  it('disables the submit button while the request is in flight', () => {
+    const pending = new Subject<RatingResponse>();
+    ratingServiceSpy.submitRating.and.returnValue(pending);
+
+    const fixture = createComponent();
+    fixture.componentInstance['form'].setValue({ driverRating: 5, vehicleRating: 4, comment: '' });
+    fixture.componentInstance.submit();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance['submitting']()).toBeTrue();
+    const button = (fixture.nativeElement as HTMLElement).querySelector(
+      'button[type="submit"]'
+    ) as HTMLButtonElement;
+    expect(button.disabled).toBeTrue();
+    expect(button.textContent).toContain('Submitting');
+
+    pending.next({
+      id: 1,
+      rideId: 42,
+      driverRating: 5,
+      vehicleRating: 4,
+      comment: null,
+      createdAt: '2026-08-22T10:00:00'
+    });
+    pending.complete();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance['submitting']()).toBeFalse();
+    expect(fixture.componentInstance['submitted']()).toBeTrue();
+  });
+
+  it('sends null for the comment when the field is left blank', () => {
+    ratingServiceSpy.submitRating.and.returnValue(
+      of({
+        id: 1,
+        rideId: 42,
+        driverRating: 4,
+        vehicleRating: 4,
+        comment: null,
+        createdAt: '2026-08-22T10:00:00'
+      })
+    );
+
+    const fixture = createComponent();
+    fixture.componentInstance['form'].setValue({ driverRating: 4, vehicleRating: 4, comment: '' });
+    fixture.componentInstance.submit();
+
+    expect(ratingServiceSpy.submitRating).toHaveBeenCalledWith(42, {
+      driverRating: 4,
+      vehicleRating: 4,
+      comment: null
+    });
+  });
+
+  it('clears a previous error message when a resubmission succeeds', () => {
+    ratingServiceSpy.submitRating.and.returnValue(
+      throwError(() => ({ error: { message: 'Ride has already been rated' } }))
+    );
+
+    const fixture = createComponent();
+    const form = fixture.componentInstance['form'];
+    form.setValue({ driverRating: 3, vehicleRating: 3, comment: '' });
+    fixture.componentInstance.submit();
+
+    expect(fixture.componentInstance['errorMessage']()).toBe('Ride has already been rated');
+
+    ratingServiceSpy.submitRating.and.returnValue(
+      of({
+        id: 2,
+        rideId: 42,
+        driverRating: 4,
+        vehicleRating: 4,
+        comment: null,
+        createdAt: '2026-08-22T10:00:00'
+      })
+    );
+    fixture.componentInstance.submit();
+
+    expect(fixture.componentInstance['errorMessage']()).toBeNull();
+    expect(fixture.componentInstance['submitted']()).toBeTrue();
+  });
+
+  it('sends the values typed into the driver rating, vehicle rating and comment fields on submit', () => {
+    ratingServiceSpy.submitRating.and.returnValue(
+      of({
+        id: 1,
+        rideId: 42,
+        driverRating: 5,
+        vehicleRating: 3,
+        comment: 'Nice driver',
+        createdAt: '2026-08-22T10:00:00'
+      })
+    );
+
+    const fixture = createComponent();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const driverInput = compiled.querySelector<HTMLInputElement>('#driverRating')!;
+    const vehicleInput = compiled.querySelector<HTMLInputElement>('#vehicleRating')!;
+    const commentInput = compiled.querySelector<HTMLTextAreaElement>('#comment')!;
+
+    driverInput.value = '5';
+    driverInput.dispatchEvent(new Event('input'));
+    vehicleInput.value = '3';
+    vehicleInput.dispatchEvent(new Event('input'));
+    commentInput.value = 'Nice driver';
+    commentInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const form = compiled.querySelector('form')!;
+    form.dispatchEvent(new Event('submit'));
+    fixture.detectChanges();
+
+    expect(ratingServiceSpy.submitRating).toHaveBeenCalledWith(42, {
+      driverRating: 5,
+      vehicleRating: 3,
+      comment: 'Nice driver'
+    });
   });
 });
